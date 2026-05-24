@@ -54,6 +54,17 @@ export default function SnakeForm() {
     <Box sx={{ maxWidth: 500, mx: 'auto', p: 2 }}>
       <Typography variant="h4" gutterBottom>Snake Details</Typography>
       <form onSubmit={handleSubmit}>
+        {/* Snake Name Section - moved to top for visibility */}
+        <Box sx={{ mb: 3 }}>
+          <TextField
+            label="Snake Name (optional)"
+            value={snakeName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSnakeName(e.target.value)}
+            fullWidth
+            margin="normal"
+          />
+        </Box>
+
         {/* Image Upload Section */}
         <Box sx={{ mb: 3 }}>
           <Typography variant="h6" gutterBottom>Snake Photo</Typography>
@@ -75,29 +86,6 @@ export default function SnakeForm() {
               <img src={imagePreview} alt="Preview" style={{ maxWidth: '100%', borderRadius: 8 }} />
             </Box>
           )}
-        </Box>
-
-        {/* Snake Name Section */}
-        <Box sx={{ mb: 3 }}>
-          <TextField
-            label="Snake Name (optional)"
-            value={snakeName}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSnakeName(e.target.value)}
-            fullWidth
-            margin="normal"
-          />
-        </Box>
-
-        {/* Comments Section */}
-        <Box sx={{ mb: 3 }}>
-          <TextField
-            label="Comments (optional)"
-            value={notes}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value)}
-            fullWidth
-            multiline
-            minRows={2}
-          />
         </Box>
 
         {/* Sliders Section */}
@@ -277,6 +265,18 @@ export default function SnakeForm() {
           <FormControlLabel
             control={<Switch checked={addToDatabase} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddToDatabase(e.target.checked)} />}
             label="Add to database (unknown species)"
+          />
+        </Box>
+
+        {/* Comments Section - moved to bottom for clarity */}
+        <Box sx={{ mb: 3, mt: 3 }}>
+          <TextField
+            label="Comments (optional)"
+            value={notes}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setNotes(e.target.value)}
+            fullWidth
+            multiline
+            minRows={2}
           />
         </Box>
 
