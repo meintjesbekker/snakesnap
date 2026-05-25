@@ -1,381 +1,157 @@
-<<<<<<< HEAD
 # SnakeSnap Project Plan
 
-This document outlines the atomic steps to build a snake identification app using a Django backend and a React frontend.
+Snake identification app — Django backend, React (MUI) frontend, targeted at mobile.
 
 ---
 
-## Backend (Django)
+## Status
 
-1. **Initialize Django Project**
-   - Install Django and create a new project (e.g., `django-admin startproject snakesnap_backend`).
-   - Create a new app for image handling (e.g., `python manage.py startapp snakeid`).
-   - Set up a virtual environment and requirements file.
-2. **Set Up Django REST Framework**
-   - Install Django REST Framework (`pip install djangorestframework`).
-   - Add `'rest_framework'` to `INSTALLED_APPS` in `settings.py`.
-   - Configure basic REST Framework settings.
-3. **Configure Media Storage**
-   - Set up `MEDIA_ROOT` and `MEDIA_URL` in `settings.py`.
-   - Configure URLs to serve uploaded files during development.
-4. **Create Models**
-   - Define a model for uploaded images (fields: image file, upload timestamp, user info if needed).
-   - Define a model for snake identification results (fields: image, snake type, confidence, matched snake, etc.).
-   - Run migrations to create database tables.
-5. **Create Serializers**
-   - Implement serializers for image upload and result models.
-   - Validate image file types and sizes.
-6. **Create API Endpoints**
-   - Endpoint to upload images (POST).
-   - Endpoint to fetch identification results (GET, optionally filtered by user or image).
-   - Use viewsets or APIViews as appropriate.
-7. **Integrate Remote Server Communication**
-   - Write logic to send uploaded images to the remote server (e.g., via HTTP request).
-   - Handle authentication/authorization if the remote server requires it.
-   - Parse and store the response (snake type, match info, etc.).
-8. **Implement Matching Logic**
-   - If the remote server returns a match, update the result model accordingly.
-   - If no match, handle as a new entry or unknown snake.
-9. **Handle CORS**
-   - Install and configure `django-cors-headers` to allow requests from the React frontend.
-   - Add allowed origins in settings.
-10. **Testing & Validation**
-    - Write unit tests for models, serializers, and API endpoints.
-    - Test image upload, remote server integration, and result retrieval.
-11. **Prepare for Deployment**
-    - Set up environment variables for secrets and remote server URLs.
-    - Configure static and media file handling for production (e.g., AWS S3, local storage).
-    - Set up production-ready settings (security, allowed hosts, etc.).
+| Area | Status |
+|------|--------|
+| Frontend scaffolding | ✅ Done |
+| Frontend UI (multi-step form) | ✅ Done |
+| Frontend theming (earthy palette, MUI) | ✅ Done |
+| Backend scaffolding | ✅ Done |
+| Backend API (sighting submission) | ✅ Done |
+| Frontend → Backend integration | ✅ Done |
+| Image storage | ✅ Done (local dev) |
+| AI identification | ⬜ Todo |
+| Deployment | ⬜ Todo |
 
 ---
 
-## Frontend (React)
+## Frontend (React) — Complete
 
-1. **Initialize React App**
-   - Create a new React project (e.g., `npx create-react-app snakesnap-frontend` or use Vite).
-   - Set up version control and project structure.
-2. **Install Dependencies**
-   - Install `axios` for HTTP requests.
-   - Install UI libraries (e.g., Material-UI, Ant Design, or Bootstrap) for styling.
-   - Install image upload helpers if needed.
-3. **Create Upload UI**
-   - Build a form with a file input for image upload.
-   - Add validation for file type and size.
-   - Add a submit button to trigger upload.
-4. **Connect to Backend API**
-   - Use `axios` to send POST requests with image data to the Django backend.
-   - Handle API responses and errors.
-   - Store and display upload progress.
-5. **Display Results**
-   - Show identification results (snake type, confidence, matched image, etc.) after upload.
-   - Display error messages if identification fails.
-6. **Handle Loading & Errors**
-   - Show loading indicators during upload and identification.
-   - Display user-friendly error messages for failed uploads or network issues.
-7. **Styling & UX**
-   - Style the app for a modern, user-friendly experience.
-   - Make the UI responsive for mobile and desktop.
-8. **Testing**
-   - Write tests for components and API integration (e.g., using Jest and React Testing Library).
-   - Test all user flows and edge cases (invalid files, network errors, etc.).
-9. **Prepare for Deployment**
-   - Configure environment variables for API URLs.
-   - Build the app for production (`npm run build`).
-   - Deploy to a static hosting service (e.g., Netlify, Vercel) or serve via Django.
+The frontend lives in `frontend/`. Run with `npm start` from that folder.
+
+- ✅ 5-step mobile `MobileStepper` form (Photo & ID → Appearance → Behaviour → Location → Notes)
+- ✅ MUI components with earthy colour theme (`#f5f0e8` background, `#4a7c3f` olive green primary)
+- ✅ Fields: snake name, species (South African list), photo upload, length, thickness, pattern, head shape, eye type, behaviour, condition, location type, micro-habitat, time of day, weather, confidence, number of snakes, comments, add-to-database toggle
+- ✅ Custom SVG snake favicon, tab title "SnakeSnap"
+- ✅ Form submits to `POST /api/sightings/` with spinner, error alert, and success screen
 
 ---
 
-## Trying Out the Frontend
+## Backend (Django) — Complete (dev)
 
-1. Open a terminal in the project root.
-2. Navigate to the frontend folder:
-   ```sh
-   cd frontend
-   ```
-3. Install dependencies (if not already installed):
-   ```sh
-   npm install
-   ```
-4. Start the development server:
-   ```sh
-   npm start
-   ```
-5. Open your browser and go to `http://localhost:3000` to see the SnakeSnap app layout.
+The backend lives in `backend/`. Run with `python manage.py runserver` from that folder.
 
-You should see a header that says "SnakeSnap" and a placeholder for future content.
+- ✅ Virtual environment, Django 6, DRF, `django-cors-headers`, Pillow installed (`requirements.txt`)
+- ✅ Project: `snakesnap` — App: `sightings`
+- ✅ `SnakeSighting` model — all form fields, JSON arrays for multi-selects, `ImageField` for photo
+- ✅ `SnakeSightingSerializer` — full model serializer
+- ✅ `GET /api/sightings/` — list all sightings
+- ✅ `POST /api/sightings/` — accept multipart form (fields + image file), save to DB
+- ✅ CORS configured for `http://localhost:3000`
+- ✅ Media files served at `/media/`, images saved to `media/sightings/`
+- ✅ Django admin registered with search, filter, and list display
+- ✅ SQLite database, migrations applied
 
 ---
 
-## Prerequisites & Tool Installation
+## Running Locally
 
-To develop and run SnakeSnap, ensure you have the following tools installed:
+### Terminal 1 — Backend
 
-### 1. Node.js & npm (for React frontend)
-- Download the installer from https://nodejs.org/
-- Run the installer and follow the prompts (accept defaults is fine).
-- After installation, open a new terminal and verify installation:
-  ```sh
-  node -v
-  npm -v
-  ```
-  Both commands should print version numbers.
+```sh
+cd backend
+.\venv\Scripts\activate        # Windows
+# source venv/bin/activate     # Mac/Linux
+python manage.py runserver
+# → http://localhost:8000
+```
 
-### 2. Python 3.x (for Django backend)
-- Download from https://python.org/
-- Run the installer and follow the prompts (ensure 'Add Python to PATH' is checked).
-- Verify installation:
-  ```sh
-  python --version
-  ```
+> First time only: `pip install -r requirements.txt` then `python manage.py migrate`
 
-### 3. Git (for version control)
-- Download from https://git-scm.com/
-- Run the installer and follow the prompts.
-- Verify installation:
-  ```sh
-  git --version
-  ```
+### Terminal 2 — Frontend
 
-### 4. (Optional) Virtual Environment Tool (for Python)
-- For Windows:
-  ```sh
-  python -m venv venv
-  .\venv\Scripts\activate
-  ```
-- For Mac/Linux:
-  ```sh
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
+```sh
+cd frontend
+npm start
+# → http://localhost:3000
+```
 
-Install these tools before proceeding with the setup steps in this document.
+> First time only: `npm install`
 
 ---
 
-## Development, Evolution, and Debugging
+## End-to-End Testing
 
-### Local Development
-- Set up the backend and frontend to run locally for rapid development and testing.
-- Use environment variables to manage settings for development, staging, and production.
-- Use Django's built-in server (`python manage.py runserver`) and React's development server (`npm start` or `yarn start`).
-- Test API endpoints with tools like Postman or curl.
-- Use Django admin for quick data inspection and management.
+Both servers must be running (`localhost:8000` and `localhost:3000`).
 
-### Debugging
-- Use Django's debug mode and error pages for backend issues.
-- Use browser developer tools and React error boundaries for frontend debugging.
-- Add logging to both backend and frontend for easier issue tracking.
-- Write and run unit tests for both backend (Django tests) and frontend (Jest/React Testing Library).
+### Manual happy path
 
-### Evolution and Deployment
-- Start with local development, then deploy to a free host (e.g., Render) for public testing.
-- As the app grows, move media storage to AWS S3 or similar for scalability.
-- Use version control (Git) and branches for feature development and bug fixes.
-- Continuously improve the app based on user feedback and testing.
-- Monitor app performance and errors using available tools (e.g., Sentry, logging services).
+1. Open `http://localhost:3000` in a browser.
+2. **Step 1 — Photo & ID:** Enter a snake name, select a species, and upload a photo. Tap **Next**.
+3. **Step 2 — Appearance:** Move the length slider, choose thickness, pattern, head shape, eye type. Tap **Next**.
+4. **Step 3 — Behaviour:** Select behaviours and condition, adjust sliders. Tap **Next**.
+5. **Step 4 — Location:** Choose location type, micro-habitat, time of day, weather. Tap **Next**.
+6. **Step 5 — Notes:** Add a comment, toggle "Add to database". Tap **Submit**.
+7. Verify the success screen appears: *"Sighting submitted!"*
+
+### Verify data was saved
+
+Open `http://localhost:8000/admin/` (create a superuser first if needed):
+
+```sh
+cd backend
+.\venv\Scripts\activate
+python manage.py createsuperuser
+```
+
+Log in and check **Sightings → Snake sightings** — the new record should appear with all fields populated and the image saved under `media/sightings/`.
+
+### Test the API directly (optional)
+
+```sh
+# List all sightings
+curl http://localhost:8000/api/sightings/
+
+# Submit a sighting without an image
+curl -X POST http://localhost:8000/api/sightings/ \
+  -F "species=Puff Adder" \
+  -F "length_cm=80" \
+  -F "confidence=75" \
+  -F "location_type=garden" \
+  -F "pattern=[\"Stripes\"]" \
+  -F "behaviour=[\"Defensive\"]" \
+  -F "condition=[]" \
+  -F "micro_habitat=[]" \
+  -F "weather=[]"
+```
+
+### What to check end-to-end
+
+| Check | Expected |
+|-------|----------|
+| Submit button shows spinner | ✅ while POST is in flight |
+| Success screen on 201 response | ✅ "Sighting submitted!" |
+| Error alert on network failure | ✅ stop the backend and retry |
+| Record visible in Django admin | ✅ all fields correct |
+| Uploaded image accessible | ✅ `http://localhost:8000/media/sightings/<filename>` |
+| CORS — no browser console errors | ✅ frontend on :3000, backend on :8000 |
+
+---
+
+## Next Steps
+
+### Step 6 — AI identification
+- Send submitted image to a remote identification service (API TBD)
+- Store the result (predicted species, confidence score) against the sighting record
+- Return result to frontend and display on the success screen
+
+### Step 7 — Deployment
+- Move `SECRET_KEY` and other secrets to environment variables (`.env`)
+- Replace SQLite with PostgreSQL
+- Configure production media storage (AWS S3 or similar)
+- Deploy backend to Render / Railway / Fly.io
+- Deploy frontend to Vercel / Netlify or serve via Django
 
 ---
 
 ## Optional Enhancements
-- User authentication (JWT or session-based).
-- Upload history and result tracking per user.
-- Admin dashboard for managing snake database and reviewing uploads.
-- Improved error handling and logging (frontend and backend).
-- Notifications or email alerts for users.
-
----
-
-**Next Steps:**
-- Choose whether to start with the backend or frontend setup.
-- Follow the atomic steps above for each part.
-=======
-# SnakeSnap Project Plan
-
-This document outlines the atomic steps to build a snake identification app using a Django backend and a React frontend.
-
----
-
-## Backend (Django)
-
-1. **Initialize Django Project**
-   - Install Django and create a new project (e.g., `django-admin startproject snakesnap_backend`).
-   - Create a new app for image handling (e.g., `python manage.py startapp snakeid`).
-   - Set up a virtual environment and requirements file.
-2. **Set Up Django REST Framework**
-   - Install Django REST Framework (`pip install djangorestframework`).
-   - Add `'rest_framework'` to `INSTALLED_APPS` in `settings.py`.
-   - Configure basic REST Framework settings.
-3. **Configure Media Storage**
-   - Set up `MEDIA_ROOT` and `MEDIA_URL` in `settings.py`.
-   - Configure URLs to serve uploaded files during development.
-4. **Create Models**
-   - Define a model for uploaded images (fields: image file, upload timestamp, user info if needed).
-   - Define a model for snake identification results (fields: image, snake type, confidence, matched snake, etc.).
-   - Run migrations to create database tables.
-5. **Create Serializers**
-   - Implement serializers for image upload and result models.
-   - Validate image file types and sizes.
-6. **Create API Endpoints**
-   - Endpoint to upload images (POST).
-   - Endpoint to fetch identification results (GET, optionally filtered by user or image).
-   - Use viewsets or APIViews as appropriate.
-7. **Integrate Remote Server Communication**
-   - Write logic to send uploaded images to the remote server (e.g., via HTTP request).
-   - Handle authentication/authorization if the remote server requires it.
-   - Parse and store the response (snake type, match info, etc.).
-8. **Implement Matching Logic**
-   - If the remote server returns a match, update the result model accordingly.
-   - If no match, handle as a new entry or unknown snake.
-9. **Handle CORS**
-   - Install and configure `django-cors-headers` to allow requests from the React frontend.
-   - Add allowed origins in settings.
-10. **Testing & Validation**
-    - Write unit tests for models, serializers, and API endpoints.
-    - Test image upload, remote server integration, and result retrieval.
-11. **Prepare for Deployment**
-    - Set up environment variables for secrets and remote server URLs.
-    - Configure static and media file handling for production (e.g., AWS S3, local storage).
-    - Set up production-ready settings (security, allowed hosts, etc.).
-
----
-
-## Frontend (React)
-
-1. **Initialize React App**
-   - Create a new React project (e.g., `npx create-react-app snakesnap-frontend` or use Vite).
-   - Set up version control and project structure.
-2. **Install Dependencies**
-   - Install `axios` for HTTP requests.
-   - Install UI libraries (e.g., Material-UI, Ant Design, or Bootstrap) for styling.
-   - Install image upload helpers if needed.
-3. **Create Upload UI**
-   - Build a form with a file input for image upload.
-   - Add validation for file type and size.
-   - Add a submit button to trigger upload.
-4. **Connect to Backend API**
-   - Use `axios` to send POST requests with image data to the Django backend.
-   - Handle API responses and errors.
-   - Store and display upload progress.
-5. **Display Results**
-   - Show identification results (snake type, confidence, matched image, etc.) after upload.
-   - Display error messages if identification fails.
-6. **Handle Loading & Errors**
-   - Show loading indicators during upload and identification.
-   - Display user-friendly error messages for failed uploads or network issues.
-7. **Styling & UX**
-   - Style the app for a modern, user-friendly experience.
-   - Make the UI responsive for mobile and desktop.
-8. **Testing**
-   - Write tests for components and API integration (e.g., using Jest and React Testing Library).
-   - Test all user flows and edge cases (invalid files, network errors, etc.).
-9. **Prepare for Deployment**
-   - Configure environment variables for API URLs.
-   - Build the app for production (`npm run build`).
-   - Deploy to a static hosting service (e.g., Netlify, Vercel) or serve via Django.
-
----
-
-## Trying Out the Frontend
-
-1. Open a terminal in the project root.
-2. Navigate to the frontend folder:
-   ```sh
-   cd frontend
-   ```
-3. Install dependencies (if not already installed):
-   ```sh
-   npm install
-   ```
-4. Start the development server:
-   ```sh
-   npm start
-   ```
-5. Open your browser and go to `http://localhost:3000` to see the SnakeSnap app layout.
-
-You should see a header that says "SnakeSnap" and a placeholder for future content.
-
----
-
-## Prerequisites & Tool Installation
-
-To develop and run SnakeSnap, ensure you have the following tools installed:
-
-### 1. Node.js & npm (for React frontend)
-- Download the installer from https://nodejs.org/
-- Run the installer and follow the prompts (accept defaults is fine).
-- After installation, open a new terminal and verify installation:
-  ```sh
-  node -v
-  npm -v
-  ```
-  Both commands should print version numbers.
-
-### 2. Python 3.x (for Django backend)
-- Download from https://python.org/
-- Run the installer and follow the prompts (ensure 'Add Python to PATH' is checked).
-- Verify installation:
-  ```sh
-  python --version
-  ```
-
-### 3. Git (for version control)
-- Download from https://git-scm.com/
-- Run the installer and follow the prompts.
-- Verify installation:
-  ```sh
-  git --version
-  ```
-
-### 4. (Optional) Virtual Environment Tool (for Python)
-- For Windows:
-  ```sh
-  python -m venv venv
-  .\venv\Scripts\activate
-  ```
-- For Mac/Linux:
-  ```sh
-  python3 -m venv venv
-  source venv/bin/activate
-  ```
-
-Install these tools before proceeding with the setup steps in this document.
-
----
-
-## Development, Evolution, and Debugging
-
-### Local Development
-- Set up the backend and frontend to run locally for rapid development and testing.
-- Use environment variables to manage settings for development, staging, and production.
-- Use Django's built-in server (`python manage.py runserver`) and React's development server (`npm start` or `yarn start`).
-- Test API endpoints with tools like Postman or curl.
-- Use Django admin for quick data inspection and management.
-
-### Debugging
-- Use Django's debug mode and error pages for backend issues.
-- Use browser developer tools and React error boundaries for frontend debugging.
-- Add logging to both backend and frontend for easier issue tracking.
-- Write and run unit tests for both backend (Django tests) and frontend (Jest/React Testing Library).
-
-### Evolution and Deployment
-- Start with local development, then deploy to a free host (e.g., Render) for public testing.
-- As the app grows, move media storage to AWS S3 or similar for scalability.
-- Use version control (Git) and branches for feature development and bug fixes.
-- Continuously improve the app based on user feedback and testing.
-- Monitor app performance and errors using available tools (e.g., Sentry, logging services).
-
----
-
-## Optional Enhancements
-- User authentication (JWT or session-based).
-- Upload history and result tracking per user.
-- Admin dashboard for managing snake database and reviewing uploads.
-- Improved error handling and logging (frontend and backend).
-- Notifications or email alerts for users.
-
----
-
-**Next Steps:**
-- Choose whether to start with the backend or frontend setup.
-- Follow the atomic steps above for each part.
->>>>>>> 8efd8688dd5aecfd4013276ca81d2fde5506e856
+- User authentication (JWT)
+- Sighting history per user
+- Map view of sighting locations
+- Push notifications
+- Admin dashboard for reviewing and curating the snake database

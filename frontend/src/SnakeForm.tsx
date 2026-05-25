@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
-  Box, Button, FormControl, InputLabel, MenuItem, MobileStepper, Select,
-  SelectChangeEvent, Slider, TextField, Typography, Switch, FormControlLabel
+  Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
+  DialogTitle, FormControl, IconButton, InputLabel, Menu, MenuItem,
+  MobileStepper, Select, SelectChangeEvent, Slider, TextField, Typography,
+  Switch, FormControlLabel
 } from '@mui/material';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 const snakeTypeOptions = [
   "Puff Adder", "Black Mamba", "Green Mamba", "Cape Cobra", "Mozambique Spitting Cobra",
@@ -97,15 +100,61 @@ export default function SnakeForm() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [identification, setIdentification] = useState<{
+    common_name: string; scientific_name: string; score: number; taxon_photo_url: string;
+  } | null>(null);
+  const [previousSightings, setPreviousSightings] = useState<{
+    id: number; created_at: string; location_type: string; snake_name: string;
+  }[]>([]);
+
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = e.target.files?.[0] || null;
     setImageFile(selected);
     setImagePreview(selected ? URL.createObjectURL(selected) : null);
   };
 
+  const submitSighting = async () => {
+    setSubmitting(true);
+    setSubmitError(null);
+    const fd = new FormData();
+    fd.append('snake_name', snakeName);
+    fd.append('species', snakeType);
+    if (imageFile) fd.append('image', imageFile);
+    fd.append('length_cm', String(length));
+    fd.append('thickness', thickness);
+    fd.append('pattern', JSON.stringify(pattern));
+    fd.append('head_shape', headShape);
+    fd.append('eye_type', eyeType);
+    fd.append('behaviour', JSON.stringify(behaviour));
+    fd.append('condition', JSON.stringify(condition));
+    fd.append('num_snakes', String(numSnakes));
+    fd.append('confidence', String(confidence));
+    fd.append('location_type', locationType);
+    fd.append('micro_habitat', JSON.stringify(microHabitat));
+    fd.append('time_of_day', timeOfDay);
+    fd.append('weather', JSON.stringify(weather));
+    fd.append('notes', notes);
+    fd.append('add_to_database', String(addToDatabase));
+    try {
+      const res = await fetch('http://localhost:8000/api/sightings/', { method: 'POST', body: fd });
+      if (!res.ok) throw new Error(`Server error ${res.status}`);
+      const data = await res.json();
+      setIdentification(data.identification ?? null);
+      setPreviousSightings(data.previous_sightings ?? []);
+      setSubmitted(true);
+    } catch {
+      setSubmitError('Failed to submit. Please check your connection and try again.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleNext = () => {
     if (activeStep === stepTitles.length - 1) {
-      alert('Form submitted!');
+      submitSighting();
     } else {
       setActiveStep((prev) => prev + 1);
     }
@@ -222,29 +271,101 @@ export default function SnakeForm() {
 
   return (
     <Box sx={{ maxWidth: 500, mx: 'auto', p: 2 }}>
-      <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-        {stepTitles[activeStep]}
-      </Typography>
+      {submitted ? (
+        <Box sx={{ py: 4 }}>
+          <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, textAlign: 'center' }}>
+            Sighting submitted!
+          </Typography>
 
-      {steps[activeStep]}
+          {identification ? (
+            <Box sx={{ mb: 3, p: 2, background: '#fff8ee', borderRadius: 2, border: '1px solid #d4c4a0' }}>
+              <Typography variant="subtitle2" sx={{ color: '#5a4a2a', mb: 0.5 }}>
+                iNaturalist identification
+              </Typography>
+              <Typography variant="h6" sx={{ fontWeight: 700 }}>
+                {identification.common_name}
+              </Typography>
+              <Typography sx={{ fontStyle: 'italic', color: '#5a4a2a', mb: 0.5 }}>
+                {identification.scientific_name}
+              </Typography>
+              <Typography variant="body2" sx={{ color: '#4a7c3f', fontWeight: 600 }}>
+                {identification.score}% confidence
+              </Typography>
+              {identification.taxon_photo_url && (
+                <Box sx={{ mt: 1.5 }}>
+                  <img
+                    src={identification.taxon_photo_url}
+                    alt={identification.common_name}
+                    style={{ width: '100%', borderRadius: 8, maxHeight: 200, objectFit: 'cover' }}
+                  />
+                </Box>
+              )}
+            </Box>
+          ) : (
+            <Box sx={{ mb: 3, p: 2, background: '#fff8ee', borderRadius: 2, border: '1px solid #d4c4a0' }}>
+              <Typography sx={{ color: '#5a4a2a' }}>
+                {imageFile
+                  ? 'No iNaturalist identification available — add your API token to enable this.'
+                  : 'No photo uploaded — submit a photo for automatic species identification.'}
+              </Typography>
+            </Box>
+          )}
 
-      <MobileStepper
-        variant="progress"
-        steps={stepTitles.length}
-        position="static"
-        activeStep={activeStep}
-        sx={{ background: 'transparent', px: 0, pt: 1 }}
-        nextButton={
-          <Button variant="contained" size="small" onClick={handleNext}>
-            {activeStep === stepTitles.length - 1 ? 'Submit' : 'Next'}
+          {previousSightings.length > 0 && (
+            <Box sx={{ mb: 3 }}>
+              <Typography variant="subtitle2" sx={{ color: '#5a4a2a', mb: 1 }}>
+                This species has been recorded {previousSightings.length} time{previousSightings.length !== 1 ? 's' : ''} before
+              </Typography>
+              {previousSightings.map((s) => (
+                <Box key={s.id} sx={{ py: 0.75, borderBottom: '1px solid #d4c4a0', display: 'flex', justifyContent: 'space-between' }}>
+                  <Typography variant="body2">
+                    {new Date(s.created_at).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric' })}
+                  </Typography>
+                  <Typography variant="body2" sx={{ color: '#5a4a2a', textTransform: 'capitalize' }}>
+                    {s.location_type || '—'}
+                  </Typography>
+                </Box>
+              ))}
+            </Box>
+          )}
+
+          <Button variant="contained" fullWidth onClick={() => window.location.reload()}>
+            Submit another sighting
           </Button>
-        }
-        backButton={
-          <Button size="small" onClick={handleBack} disabled={activeStep === 0}>
-            Back
-          </Button>
-        }
-      />
+        </Box>
+      ) : (
+        <>
+          <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
+            {stepTitles[activeStep]}
+          </Typography>
+
+          {steps[activeStep]}
+
+          {submitError && (
+            <Alert severity="error" sx={{ mb: 2 }}>{submitError}</Alert>
+          )}
+
+          <MobileStepper
+            variant="progress"
+            steps={stepTitles.length}
+            position="static"
+            activeStep={activeStep}
+            sx={{ background: 'transparent', px: 0, pt: 1 }}
+            nextButton={
+              <Button variant="contained" size="small" onClick={handleNext} disabled={submitting}>
+                {submitting
+                  ? <CircularProgress size={18} sx={{ color: '#fff' }} />
+                  : activeStep === stepTitles.length - 1 ? 'Submit' : 'Next'}
+              </Button>
+            }
+            backButton={
+              <Button size="small" onClick={handleBack} disabled={activeStep === 0 || submitting}>
+                Back
+              </Button>
+            }
+          />
+        </>
+      )}
     </Box>
   );
 }
