@@ -1,6 +1,13 @@
 import React, { useState, useRef } from 'react';
+import { createTheme, ThemeProvider } from '@mui/material';
 import './App.css';
 import SnakeForm from './SnakeForm';
+
+const theme = createTheme({
+  palette: {
+    primary: { main: '#4a7c3f' },
+  },
+});
 
 function App() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -54,13 +61,14 @@ function App() {
   };
 
   return (
-    <div className="App" style={{ minHeight: '100vh', background: '#222', color: '#fff', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-      <header style={{ width: '100%', maxWidth: 500, textAlign: 'center' }}>
-        <h1 style={{ fontSize: '2.5rem', marginBottom: 8 }}>SnakeSnap</h1>
-        <p style={{ marginBottom: 24 }}>Upload a snake photo and enter details to identify its type.</p>
-        <SnakeForm />
-      </header>
-    </div>
+    <ThemeProvider theme={theme}>
+      <div className="App" style={{ minHeight: '100vh', background: '#f5f0e8', color: '#2c2008', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 24, paddingBottom: 24 }}>
+        <header style={{ width: '100%', maxWidth: 500, textAlign: 'center', paddingLeft: 8, paddingRight: 8 }}>
+          <h1 style={{ fontSize: '2rem', marginBottom: 16, color: '#2c2008' }}>SnakeSnap</h1>
+          <SnakeForm />
+        </header>
+      </div>
+    </ThemeProvider>
   );
 }
 
