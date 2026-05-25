@@ -1,7 +1,9 @@
-import React, { useState, useRef } from 'react';
+import { useState } from 'react';
 import { createTheme, ThemeProvider } from '@mui/material';
 import './App.css';
+import AuthScreen from './AuthScreen';
 import SnakeForm from './SnakeForm';
+import { clearTokens, isLoggedIn } from './auth';
 
 const theme = createTheme({
   palette: {
@@ -10,63 +12,23 @@ const theme = createTheme({
 });
 
 function App() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<string | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [result, setResult] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [loggedIn, setLoggedIn] = useState(isLoggedIn());
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setSelectedFile(file);
-    setResult(null);
-    setError(null);
-    if (file) {
-      setPreview(URL.createObjectURL(file));
-    } else {
-      setPreview(null);
-    }
-  };
+  const handleLogin = () => setLoggedIn(true);
 
-  const handleUpload = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedFile) {
-      setError('Please select an image file.');
-      return;
-    }
-    setUploading(true);
-    setResult(null);
-    setError(null);
-    try {
-      // Replace the URL below with your backend endpoint
-      const formData = new FormData();
-      formData.append('image', selectedFile);
-      const response = await fetch('http://localhost:8000/api/upload/', {
-        method: 'POST',
-        body: formData,
-      });
-      if (!response.ok) throw new Error('Upload failed');
-      const data = await response.json();
-      setResult(data.result || 'No result returned.');
-    } catch (err) {
-      setError('Failed to upload or identify the snake.');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleChooseFile = () => {
-    fileInputRef.current?.click();
+  const handleLogout = () => {
+    clearTokens();
+    setLoggedIn(false);
   };
 
   return (
     <ThemeProvider theme={theme}>
       <div className="App" style={{ minHeight: '100vh', background: '#f5f0e8', color: '#2c2008', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: 24, paddingBottom: 24 }}>
-        <header style={{ width: '100%', maxWidth: 500, textAlign: 'center', paddingLeft: 8, paddingRight: 8 }}>
-          <h1 style={{ fontSize: '2rem', marginBottom: 16, color: '#2c2008' }}>SnakeSnap</h1>
-          <SnakeForm />
-        </header>
+        <div style={{ width: '100%', maxWidth: 500, paddingLeft: 8, paddingRight: 8 }}>
+          {loggedIn
+            ? <SnakeForm onLogout={handleLogout} />
+            : <AuthScreen onLogin={handleLogin} />}
+        </div>
       </div>
     </ThemeProvider>
   );

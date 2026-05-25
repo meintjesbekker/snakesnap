@@ -1,5 +1,6 @@
 from rest_framework import status
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -9,10 +10,11 @@ from .serializers import SnakeSightingSerializer
 
 
 class SnakeSightingListCreateView(APIView):
+    permission_classes = [IsAuthenticated]
     parser_classes = [MultiPartParser, FormParser, JSONParser]
 
     def get(self, request):
-        sightings = SnakeSighting.objects.all()
+        sightings = SnakeSighting.objects.filter(user=request.user)
         serializer = SnakeSightingSerializer(sightings, many=True, context={'request': request})
         return Response(serializer.data)
 
@@ -21,7 +23,7 @@ class SnakeSightingListCreateView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-        sighting = serializer.save()
+        sighting = serializer.save(user=request.user)
 
         identification = None
         previous_sightings = []
@@ -38,7 +40,6 @@ class SnakeSightingListCreateView(APIView):
                     inat_score=identification['score'],
                 )
 
-                # Find previous sightings of the same species using stable taxon ID
                 if identification['taxon_id']:
                     qs = (
                         SnakeSighting.objects

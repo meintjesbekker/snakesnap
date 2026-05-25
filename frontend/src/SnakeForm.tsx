@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { authHeader } from './auth';
 import {
   Alert, Box, Button, CircularProgress, Dialog, DialogActions, DialogContent,
   DialogTitle, FormControl, IconButton, InputLabel, Menu, MenuItem,
@@ -78,7 +79,7 @@ function MultiSelect({ label, value, options, onChange }: MultiSelectProps) {
   );
 }
 
-export default function SnakeForm() {
+export default function SnakeForm({ onLogout }: { onLogout: () => void }) {
   const [activeStep, setActiveStep] = useState(0);
   const [snakeName, setSnakeName] = useState('');
   const [snakeType, setSnakeType] = useState('');
@@ -149,9 +150,13 @@ export default function SnakeForm() {
     fd.append('notes', notes);
     fd.append('add_to_database', String(addToDatabase));
     try {
-      const token = localStorage.getItem('inat_token') ?? '';
-      const headers: HeadersInit = token ? { 'X-Inat-Token': token } : {};
+      const inatToken = localStorage.getItem('inat_token') ?? '';
+      const headers: HeadersInit = {
+        ...authHeader(),
+        ...(inatToken ? { 'X-Inat-Token': inatToken } : {}),
+      };
       const res = await fetch('http://localhost:8000/api/sightings/', { method: 'POST', body: fd, headers });
+      if (res.status === 401) { onLogout(); return; }
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
       setIdentification(data.identification ?? null);
@@ -298,6 +303,9 @@ export default function SnakeForm() {
         </MenuItem>
         <MenuItem onClick={() => { closeMenu(); setAboutOpen(true); }}>
           About
+        </MenuItem>
+        <MenuItem onClick={() => { closeMenu(); onLogout(); }}>
+          Logout
         </MenuItem>
       </Menu>
 

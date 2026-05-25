@@ -6,4 +6,4 @@ class SnakeSightingSerializer(serializers.ModelSerializer):
     class Meta:
         model = SnakeSighting
         fields = '__all__'
-        read_only_fields = ['created_at']
+        read_only_fields = ['created_at', 'user']

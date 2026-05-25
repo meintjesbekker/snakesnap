@@ -1,4 +1,7 @@
+from django.contrib.auth import get_user_model
 from django.db import models
+
+User = get_user_model()
 
 
 class SnakeSighting(models.Model):
@@ -10,6 +13,8 @@ class SnakeSighting(models.Model):
         ('farmland', 'Farmland'), ('wetland', 'Wetland'), ('urban', 'Urban'),
     ]
     TIME_CHOICES = [('morning', 'Morning'), ('afternoon', 'Afternoon'), ('evening', 'Evening'), ('night', 'Night')]
+
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sightings')
 
     snake_name = models.CharField(max_length=200, blank=True)
     species = models.CharField(max_length=200, blank=True)
