@@ -27,7 +27,8 @@ class SnakeSightingListCreateView(APIView):
         previous_sightings = []
 
         if sighting.image:
-            identification = identify_image(sighting.image.path)
+            token = request.headers.get('X-Inat-Token') or None
+            identification = identify_image(sighting.image.path, token=token)
 
             if identification:
                 SnakeSighting.objects.filter(pk=sighting.pk).update(

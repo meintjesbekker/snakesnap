@@ -5,7 +5,7 @@ import {
   MobileStepper, Select, SelectChangeEvent, Slider, TextField, Typography,
   Switch, FormControlLabel
 } from '@mui/material';
-import SettingsIcon from '@mui/icons-material/Settings';
+import MenuIcon from '@mui/icons-material/Menu';
 
 const snakeTypeOptions = [
   "Puff Adder", "Black Mamba", "Green Mamba", "Cape Cobra", "Mozambique Spitting Cobra",
@@ -103,6 +103,16 @@ export default function SnakeForm() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+
+  // Settings / menu state
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [aboutOpen, setAboutOpen] = useState(false);
+  const [tokenInput, setTokenInput] = useState('');
+
+  useEffect(() => {
+    setTokenInput(localStorage.getItem('inat_token') ?? '');
+  }, []);
   const [identification, setIdentification] = useState<{
     common_name: string; scientific_name: string; score: number; taxon_photo_url: string;
   } | null>(null);
@@ -139,7 +149,9 @@ export default function SnakeForm() {
     fd.append('notes', notes);
     fd.append('add_to_database', String(addToDatabase));
     try {
-      const res = await fetch('http://localhost:8000/api/sightings/', { method: 'POST', body: fd });
+      const token = localStorage.getItem('inat_token') ?? '';
+      const headers: HeadersInit = token ? { 'X-Inat-Token': token } : {};
+      const res = await fetch('http://localhost:8000/api/sightings/', { method: 'POST', body: fd, headers });
       if (!res.ok) throw new Error(`Server error ${res.status}`);
       const data = await res.json();
       setIdentification(data.identification ?? null);
@@ -269,8 +281,76 @@ export default function SnakeForm() {
     </Box>,
   ];
 
+  const closeMenu = () => setMenuAnchor(null);
+
   return (
     <Box sx={{ maxWidth: 500, mx: 'auto', p: 2 }}>
+
+      {/* Settings icon + dropdown menu */}
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+        <IconButton size="small" onClick={(e) => setMenuAnchor(e.currentTarget)}>
+          <MenuIcon fontSize="small" />
+        </IconButton>
+      </Box>
+      <Menu anchorEl={menuAnchor} open={Boolean(menuAnchor)} onClose={closeMenu}>
+        <MenuItem onClick={() => { closeMenu(); setSettingsOpen(true); }}>
+          iNaturalist Token
+        </MenuItem>
+        <MenuItem onClick={() => { closeMenu(); setAboutOpen(true); }}>
+          About
+        </MenuItem>
+      </Menu>
+
+      {/* iNaturalist Token dialog */}
+      <Dialog open={settingsOpen} onClose={() => setSettingsOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>iNaturalist Token</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 2, color: '#5a4a2a' }}>
+            Paste your API token from{' '}
+            <strong>inaturalist.org/users/api_token</strong>{' '}
+            (log in first). The token is saved on this device only.
+          </Typography>
+          <TextField
+            label="API Token"
+            value={tokenInput}
+            onChange={(e) => setTokenInput(e.target.value)}
+            fullWidth
+            multiline
+            minRows={2}
+            sx={textFieldSx}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSettingsOpen(false)}>Cancel</Button>
+          <Button variant="contained" onClick={() => {
+            localStorage.setItem('inat_token', tokenInput.trim());
+            setSettingsOpen(false);
+          }}>
+            Save
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* About dialog */}
+      <Dialog open={aboutOpen} onClose={() => setAboutOpen(false)} fullWidth maxWidth="sm">
+        <DialogTitle>About SnakeSnap</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            <strong>SnakeSnap</strong> helps you record and identify snake sightings across South Africa.
+          </Typography>
+          <Typography variant="body2" sx={{ mb: 1 }}>
+            Submit a photo and sighting details and the app will use the{' '}
+            <strong>iNaturalist computer vision API</strong> to suggest the species, then show you
+            where and when that species has been recorded before.
+          </Typography>
+          <Typography variant="body2" sx={{ color: '#5a4a2a' }}>
+            Species identification powered by iNaturalist · inaturalist.org
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button variant="contained" onClick={() => setAboutOpen(false)}>Close</Button>
+        </DialogActions>
+      </Dialog>
       {submitted ? (
         <Box sx={{ py: 4 }}>
           <Typography variant="h5" sx={{ mb: 3, fontWeight: 600, textAlign: 'center' }}>

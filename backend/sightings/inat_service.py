@@ -4,12 +4,13 @@ from django.conf import settings
 INAT_CV_URL = 'https://api.inaturalist.org/v1/computervision/score_image'
 
 
-def identify_image(image_path):
+def identify_image(image_path, token=None):
     """
     Submit an image to iNaturalist's computer vision API.
     Returns the top species match or None if unavailable.
+    token: caller-supplied value (from request header); falls back to settings.
     """
-    token = getattr(settings, 'INATURALIST_API_TOKEN', '')
+    token = token or getattr(settings, 'INATURALIST_API_TOKEN', '')
     if not token:
         return None
 
