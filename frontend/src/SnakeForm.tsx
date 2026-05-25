@@ -62,6 +62,7 @@ export default function SnakeForm() {
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSnakeName(e.target.value)}
             fullWidth
             margin="normal"
+            sx={{ input: { color: '#222', background: '#fff' }, label: { color: '#222' } }}
           />
         </Box>
 
@@ -277,6 +278,7 @@ export default function SnakeForm() {
             fullWidth
             multiline
             minRows={2}
+            sx={{ input: { color: '#222', background: '#fff' }, label: { color: '#222' } }}
           />
         </Box>
 
