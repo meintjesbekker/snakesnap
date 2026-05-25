@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import {
-  Box, Button, Checkbox, FormControl, FormControlLabel, FormGroup, InputLabel, MenuItem, Select, Slider, TextField, Typography, Switch
+  Box, Button, FormControl, InputLabel, MenuItem, Select, SelectChangeEvent, Slider, TextField, Typography, Switch, FormControlLabel
 } from '@mui/material';
 
 const patternOptions = ["Stripes", "Bands", "Spots", "Solid", "Diamond", "Speckled"];
@@ -8,6 +8,83 @@ const behaviourOptions = ["Calm", "Hiding", "Climbing", "Swimming", "Defensive",
 const conditionOptions = ["Healthy", "Shedding", "Injured", "Parasites"];
 const microHabitatOptions = ["Grass", "Under rock", "Leaf litter", "Tree", "Water edge", "Path", "Wall"];
 const weatherOptions = ["Sunny", "Cloudy", "Rainy", "Windy", "Hot", "Cold"];
+
+type MultiSelectProps = {
+  label: string;
+  value: string[];
+  options: string[];
+  onChange: (e: SelectChangeEvent<string[]>) => void;
+};
+
+// Helper for consistent dropdown styling and spacing
+const dropdownSx = {
+  color: '#222',
+  background: '#fff',
+  borderRadius: 1,
+  mb: 4,
+  '& .MuiInputLabel-root': { color: '#222', background: '#fff', px: 0.5 },
+  '& .MuiSelect-select': { minHeight: 48, display: 'flex', alignItems: 'center' },
+};
+
+// Utility for single-select dropdowns
+function SingleSelect({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (e: SelectChangeEvent<string>) => void }) {
+  return (
+    <FormControl fullWidth sx={dropdownSx}>
+      <InputLabel sx={{ color: '#222', background: '#fff', px: 0.5 }}>{label}</InputLabel>
+      <Select
+        value={value}
+        onChange={onChange}
+        label={label}
+        sx={dropdownSx}
+        MenuProps={{
+          sx: {
+            '& .MuiPaper-root': {
+              background: '#fff',
+              color: '#222',
+            },
+          },
+        }}
+      >
+        {options.map((option: string) => (
+          <MenuItem key={option} value={option}>
+            {option}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+}
+
+// Utility for multi-select dropdowns
+function MultiSelect({ label, value, options, onChange }: MultiSelectProps) {
+  return (
+    <FormControl fullWidth sx={dropdownSx}>
+      <InputLabel sx={{ color: '#222', background: '#fff', px: 0.5 }}>{label}</InputLabel>
+      <Select
+        multiple
+        value={value}
+        onChange={onChange}
+        label={label}
+        sx={dropdownSx}
+        renderValue={(selected) => (selected as string[]).join(', ')}
+        MenuProps={{
+          sx: {
+            '& .MuiPaper-root': {
+              background: '#fff',
+              color: '#222',
+            },
+          },
+        }}
+      >
+        {options.map((option: string) => (
+          <MenuItem key={option} value={option}>
+            {option}
+          </MenuItem>
+        ))}
+      </Select>
+    </FormControl>
+  );
+}
 
 export default function SnakeForm() {
   const [snakeName, setSnakeName] = useState('');
@@ -29,16 +106,11 @@ export default function SnakeForm() {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
 
-  // Helper for multi-checkbox
-  const handleMultiCheckbox = (value: string, list: string[], setter: (v: string[]) => void) => {
-    setter(list.includes(value) ? list.filter((v) => v !== value) : [...list, value]);
-  };
-
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0] || null;
-    setImageFile(file);
-    if (file) {
-      setImagePreview(URL.createObjectURL(file));
+    const selected = e.target.files?.[0] || null;
+    setImageFile(selected);
+    if (selected) {
+      setImagePreview(URL.createObjectURL(selected));
     } else {
       setImagePreview(null);
     }
@@ -127,147 +199,93 @@ export default function SnakeForm() {
 
         {/* Thickness */}
         <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth>
-            <InputLabel>Body Thickness</InputLabel>
-            <Select value={thickness} label="Body Thickness" onChange={(e: any) => setThickness(e.target.value)}>
-              <MenuItem value="thin">Thin</MenuItem>
-              <MenuItem value="medium">Medium</MenuItem>
-              <MenuItem value="thick">Thick</MenuItem>
-            </Select>
-          </FormControl>
+          <SingleSelect
+            label="Body Thickness"
+            value={thickness}
+            options={['Thin', 'Medium', 'Thick']}
+            onChange={(e: SelectChangeEvent<string>) => setThickness(e.target.value)}
+          />
         </Box>
 
-        {/* Pattern Chips */}
-        <Box sx={{ mb: 3 }}>
-          <Typography gutterBottom>Colour Pattern</Typography>
-          <FormGroup row>
-            {patternOptions.map(p => (
-              <FormControlLabel
-                key={p}
-                control={<Checkbox checked={pattern.includes(p)} onChange={() => handleMultiCheckbox(p, pattern, setPattern)} />}
-                label={p}
-              />
-            ))}
-          </FormGroup>
-        </Box>
+        {/* Pattern MultiSelect */}
+        <MultiSelect
+          label="Colour Pattern"
+          value={pattern}
+          options={patternOptions}
+          onChange={(e: SelectChangeEvent<string[]>) => setPattern(e.target.value as string[])}
+        />
 
         {/* Head Shape */}
         <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth>
-            <InputLabel>Head Shape</InputLabel>
-            <Select value={headShape} label="Head Shape" onChange={(e: any) => setHeadShape(e.target.value)}>
-              <MenuItem value="">Select...</MenuItem>
-              <MenuItem value="rounded">Rounded</MenuItem>
-              <MenuItem value="triangular">Triangular</MenuItem>
-              <MenuItem value="narrow">Narrow</MenuItem>
-            </Select>
-          </FormControl>
+          <SingleSelect
+            label="Head Shape"
+            value={headShape}
+            options={['Rounded', 'Triangular', 'Narrow']}
+            onChange={(e: SelectChangeEvent<string>) => setHeadShape(e.target.value)}
+          />
         </Box>
 
         {/* Eye Type */}
         <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth>
-            <InputLabel>Eye Type</InputLabel>
-            <Select value={eyeType} label="Eye Type" onChange={(e: any) => setEyeType(e.target.value)}>
-              <MenuItem value="">Select...</MenuItem>
-              <MenuItem value="round">Round pupil</MenuItem>
-              <MenuItem value="vertical">Vertical pupil</MenuItem>
-              <MenuItem value="unknown">Not visible</MenuItem>
-            </Select>
-          </FormControl>
+          <SingleSelect
+            label="Eye Type"
+            value={eyeType}
+            options={['Round pupil', 'Vertical pupil', 'Not visible']}
+            onChange={(e: SelectChangeEvent<string>) => setEyeType(e.target.value)}
+          />
         </Box>
 
-        {/* Behaviour */}
-        <Box sx={{ mb: 3 }}>
-          <Typography gutterBottom>Behaviour</Typography>
-          <FormGroup row>
-            {behaviourOptions.map(b => (
-              <FormControlLabel
-                key={b}
-                control={<Checkbox checked={behaviour.includes(b)} onChange={() => handleMultiCheckbox(b, behaviour, setBehaviour)} />}
-                label={b}
-              />
-            ))}
-          </FormGroup>
-        </Box>
+        {/* Behaviour MultiSelect */}
+        <MultiSelect
+          label="Behaviour"
+          value={behaviour}
+          options={behaviourOptions}
+          onChange={(e: SelectChangeEvent<string[]>) => setBehaviour(e.target.value as string[])}
+        />
 
-        {/* Condition */}
-        <Box sx={{ mb: 3 }}>
-          <Typography gutterBottom>Condition</Typography>
-          <FormGroup row>
-            {conditionOptions.map(c => (
-              <FormControlLabel
-                key={c}
-                control={<Checkbox checked={condition.includes(c)} onChange={() => handleMultiCheckbox(c, condition, setCondition)} />}
-                label={c}
-              />
-            ))}
-          </FormGroup>
-        </Box>
+        {/* Condition MultiSelect */}
+        <MultiSelect
+          label="Condition"
+          value={condition}
+          options={conditionOptions}
+          onChange={(e: SelectChangeEvent<string[]>) => setCondition(e.target.value as string[])}
+        />
 
         {/* Location Type */}
         <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth>
-            <InputLabel>Location Type</InputLabel>
-            <Select value={locationType} label="Location Type" onChange={(e: any) => setLocationType(e.target.value)}>
-              <MenuItem value="garden">Garden</MenuItem>
-              <MenuItem value="forest">Forest</MenuItem>
-              <MenuItem value="roadside">Roadside</MenuItem>
-              <MenuItem value="farmland">Farmland</MenuItem>
-              <MenuItem value="wetland">Wetland</MenuItem>
-              <MenuItem value="urban">Urban</MenuItem>
-            </Select>
-          </FormControl>
+          <SingleSelect
+            label="Location Type"
+            value={locationType}
+            options={['Garden', 'Forest', 'Roadside', 'Farmland', 'Wetland', 'Urban']}
+            onChange={(e: SelectChangeEvent<string>) => setLocationType(e.target.value)}
+          />
         </Box>
 
-        {/* Microhabitat */}
-        <Box sx={{ mb: 3 }}>
-          <Typography gutterBottom>Micro‑Habitat</Typography>
-          <FormGroup row>
-            {microHabitatOptions.map(m => (
-              <FormControlLabel
-                key={m}
-                control={<Checkbox checked={microHabitat.includes(m)} onChange={() => handleMultiCheckbox(m, microHabitat, setMicroHabitat)} />}
-                label={m}
-              />
-            ))}
-          </FormGroup>
-        </Box>
+        {/* Microhabitat MultiSelect */}
+        <MultiSelect
+          label="Micro‑Habitat"
+          value={microHabitat}
+          options={microHabitatOptions}
+          onChange={(e: SelectChangeEvent<string[]>) => setMicroHabitat(e.target.value as string[])}
+        />
 
         {/* Time of Day */}
         <Box sx={{ mb: 3 }}>
-          <FormControl fullWidth>
-            <InputLabel>Time of Day</InputLabel>
-            <Select value={timeOfDay} label="Time of Day" onChange={(e: any) => setTimeOfDay(e.target.value)}>
-              <MenuItem value="morning">Morning</MenuItem>
-              <MenuItem value="afternoon">Afternoon</MenuItem>
-              <MenuItem value="evening">Evening</MenuItem>
-              <MenuItem value="night">Night</MenuItem>
-            </Select>
-          </FormControl>
-        </Box>
-
-        {/* Weather */}
-        <Box sx={{ mb: 3 }}>
-          <Typography gutterBottom>Weather</Typography>
-          <FormGroup row>
-            {weatherOptions.map(w => (
-              <FormControlLabel
-                key={w}
-                control={<Checkbox checked={weather.includes(w)} onChange={() => handleMultiCheckbox(w, weather, setWeather)} />}
-                label={w}
-              />
-            ))}
-          </FormGroup>
-        </Box>
-
-        {/* Add to Database */}
-        <Box sx={{ mb: 3 }}>
-          <FormControlLabel
-            control={<Switch checked={addToDatabase} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddToDatabase(e.target.checked)} />}
-            label="Add to database (unknown species)"
+          <SingleSelect
+            label="Time of Day"
+            value={timeOfDay}
+            options={['Morning', 'Afternoon', 'Evening', 'Night']}
+            onChange={(e: SelectChangeEvent<string>) => setTimeOfDay(e.target.value)}
           />
         </Box>
+
+        {/* Weather MultiSelect */}
+        <MultiSelect
+          label="Weather"
+          value={weather}
+          options={weatherOptions}
+          onChange={(e: SelectChangeEvent<string[]>) => setWeather(e.target.value as string[])}
+        />
 
         {/* Comments Section - moved to bottom for clarity */}
         <Box sx={{ mb: 3, mt: 3 }}>
@@ -279,6 +297,14 @@ export default function SnakeForm() {
             multiline
             minRows={2}
             sx={{ input: { color: '#222', background: '#fff' }, label: { color: '#222' } }}
+          />
+        </Box>
+
+        {/* Add to Database */}
+        <Box sx={{ mb: 3 }}>
+          <FormControlLabel
+            control={<Switch checked={addToDatabase} onChange={(e: React.ChangeEvent<HTMLInputElement>) => setAddToDatabase(e.target.checked)} />}
+            label="Add to database (unknown species)"
           />
         </Box>
 
